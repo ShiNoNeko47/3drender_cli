@@ -18,6 +18,7 @@ pub struct View {
     pub clear_pixel: char,
     pub vert_pixel: char,
     pub center_pixel: Option<char>,
+    pub border: [char; 6],
 }
 
 impl View {
@@ -33,11 +34,12 @@ impl View {
             right,
             up,
             resolution: (60, 15), // cell height to width ratio in terminal emulators is usually 2:1
-            far: 100.0,
+            far: 200.0,
             near: 0.1,
             clear_pixel: ' ',
             vert_pixel: '*',
             center_pixel: None,
+            border: ['│', '─', '└', '┘', '┌', '┐'],
         }
     }
 
@@ -60,11 +62,18 @@ impl View {
     pub fn render(&self, obj: &object::Object) {
         let mut verts = vec![];
         for point in obj.points() {
-            verts.push(self.get_projection(point));
+            if point.x != self.origin.x || point.y != self.origin.y || point.z != self.origin.z {
+                verts.push(self.get_projection(point));
+            }
         }
         // println!("{:?}", verts);
         for i in 0..self.resolution.1 {
             let y: i32 = self.resolution.1 as i32 / 2 - i as i32;
+
+            if i == 0 {
+                self.draw_border_top();
+            }
+
             for j in 0..self.resolution.0 {
                 let x: i32 = j as i32 - self.resolution.0 as i32 / 2;
                 if y == 0 && x == 0 {
@@ -79,8 +88,29 @@ impl View {
                 }
                 print!("{}", self.clear_pixel);
             }
-            println!();
+
+            if i == self.resolution.1 - 1 {
+                self.draw_border_bottom();
+                continue;
+            }
+            print!("{}\n{}", self.border[0], self.border[0]);
         }
+    }
+
+    fn draw_border_bottom(&self) {
+        print!("{}\n{}", self.border[0], self.border[2]);
+        for _ in 0..self.resolution.0 {
+            print!("{}", self.border[1]);
+        }
+        print!("{}", self.border[3]);
+    }
+
+    fn draw_border_top(&self) {
+        print!("{}", self.border[4]);
+        for _ in 0..self.resolution.0 {
+            print!("{}", self.border[1]);
+        }
+        print!("{}\n{}", self.border[5], self.border[0]);
     }
 
     fn get_projection(&self, point: &Point3<f32>) -> (f32, f32) {
