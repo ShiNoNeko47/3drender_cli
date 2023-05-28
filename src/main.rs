@@ -1,11 +1,13 @@
-use cli_render::{
-    object::{self, Point},
-    view::View,
-};
+use cli_render::{object, view::View};
 
 fn main() {
-    let mut camera = View::new(Point::new(0.0, 0.0, 0.0), Point::new(-4.0, -4.0, -12.0));
-    // camera.print_projection_plane();
+    let mut camera = View::new(
+        nalgebra::Point3::new(0.0, 0.0, 0.0),
+        nalgebra::Point3::new(5.0, 3.0, 10.0),
+    );
+    // camera.resolution = (120, 30);
+    // camera.center_pixel = Some('o');
+    // camera.clear_pixel = '.';
 
     let mut object = object::Object::new();
     object.add_point(-2.0, -2.0, -2.0);
