@@ -19,7 +19,7 @@ pub struct View {
     pub clear_pixel: char,
     pub vert_pixel: char,
     pub center_pixel: Option<char>,
-    pub border: [char; 6],
+    pub edge_pixel: char,
 }
 
 impl View {
@@ -40,7 +40,7 @@ impl View {
             clear_pixel: ' ',
             vert_pixel: '*',
             center_pixel: None,
-            border: ['│', '─', '┌', '┐', '└', '┘'],
+            edge_pixel: '-',
         }
     }
 
@@ -60,18 +60,12 @@ impl View {
         self.up = self.right.cross(&self.forward).normalize();
     }
 
-    pub fn render(&self, obj: &object::Object) -> String {
-        let mut render = String::new();
+    pub fn render(&self, obj: &object::Object) -> Vec<Vec<u8>> {
+        let mut render = vec![vec![self.clear_pixel as u8; self.resolution.0]; self.resolution.1];
         let mut verts = vec![];
         for point in obj.points() {
             if point.x != self.origin.x || point.y != self.origin.y || point.z != self.origin.z {
                 verts.push(self.get_projection(point));
-                // match self.get_projection(point) {
-                //     Some(p) => {
-                //         verts.push(p);
-                //     }
-                //     None => {}
-                // }
             }
         }
 
@@ -82,56 +76,27 @@ impl View {
                 edges.append(edge);
             }
         }
-        for i in 0..self.resolution.1 {
-            let y: i32 = self.resolution.1 as i32 / 2 - i as i32;
 
-            if i == 0 {
-                self.draw_border_top(&mut render);
-            }
-
-            for j in 0..self.resolution.0 {
-                let x: i32 = j as i32 - self.resolution.0 as i32 / 2;
-                if y == 0 && x == 0 {
-                    if let Some(center_pixel) = self.center_pixel {
-                        render.push_str(&format!("{}", center_pixel));
-                        continue;
-                    }
-                }
-                if edges.contains(&(x as f32, y as f32)) {
-                    render.push_str("-");
-                    continue;
-                }
-                if verts.contains(&Some((x as f32, y as f32))) {
-                    render.push_str(&format!("{}", self.vert_pixel));
-                    continue;
-                }
-                render.push_str(&format!("{}", self.clear_pixel));
-            }
-
-            if i == self.resolution.1 - 1 {
-                self.draw_border_bottom(&mut render);
+        for vert in verts {
+            if vert.is_none() {
                 continue;
             }
-            render.push_str(&format!("{}\n{}", self.border[0], self.border[0]));
+            self.render_pixel(vert, &mut render, self.vert_pixel);
+        }
+
+        for edge in edges {
+            self.render_pixel(Some(edge), &mut render, self.edge_pixel);
         }
 
         render
     }
 
-    fn draw_border_bottom(&self, render: &mut String) {
-        render.push_str(&format!("{}\n{}", self.border[0], self.border[4]));
-        for _ in 0..self.resolution.0 {
-            render.push_str(&format!("{}", self.border[1]));
+    fn render_pixel(&self, coords: Option<(f32, f32)>, render: &mut Vec<Vec<u8>>, pixel: char) {
+        let y = self.resolution.1 as f32 - (coords.unwrap().1 + self.resolution.1 as f32 / 2.0);
+        let x = self.resolution.0 as f32 - (coords.unwrap().0 + self.resolution.0 as f32 / 2.0);
+        if y >= 0.0 && x >= 0.0 && y < self.resolution.1 as f32 && x < self.resolution.0 as f32 {
+            render[y as usize][x as usize] = pixel as u8;
         }
-        render.push_str(&format!("{}", self.border[5]));
-    }
-
-    fn draw_border_top(&self, render: &mut String) {
-        render.push_str(&format!("{}", self.border[2]));
-        for _ in 0..self.resolution.0 {
-            render.push_str(&format!("{}", self.border[1]));
-        }
-        render.push_str(&format!("{}\n{}", self.border[3], self.border[0]));
     }
 
     fn get_projection(&self, point: &Point3<f32>) -> Option<(f32, f32)> {

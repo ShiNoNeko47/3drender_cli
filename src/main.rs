@@ -5,10 +5,7 @@ fn main() {
         nalgebra::Point3::new(0.0, 0.0, 0.0),
         nalgebra::Point3::new(4.0, 3.0, 6.0),
     );
-    // camera.border[0] = ' ';
-    // camera.border[1] = ' ';
-    camera.border = [' ', ' ', ' ', ' ', ' ', ' '];
-    camera.resolution = (150, 45);
+    // camera.resolution = (150, 45);
 
     // camera.center_pixel = Some('o');
     // camera.clear_pixel = '.';
@@ -39,7 +36,7 @@ fn main() {
     // object.add_point(0.0, 0.0, 0.0);
 
     ncurses::initscr();
-    ncurses::cbreak();
+    ncurses::raw();
     ncurses::noecho();
     ncurses::refresh();
     ncurses::curs_set(ncurses::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
@@ -48,7 +45,13 @@ fn main() {
 
     loop {
         ncurses::clear();
-        ncurses::addstr(&format!("{}", camera.render(&object)));
+        let render = camera.render(&object);
+        for i in 0..render.len() {
+            ncurses::addstr(&format!(
+                "{}\n",
+                String::from_utf8(render[i].clone()).unwrap()
+            ));
+        }
         key = ncurses::getch();
         // ncurses::addstr(&format!("{}", key));
         match key {
