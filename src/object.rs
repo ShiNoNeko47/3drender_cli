@@ -1,14 +1,14 @@
 #[derive(Debug)]
 pub struct Object {
     points: Vec<nalgebra::geometry::Point3<f32>>,
-    // edges: Vec<(Point, Point)>,
+    edges: Vec<(usize, usize)>,
 }
 
 impl Object {
     pub fn new() -> Self {
         Self {
             points: vec![],
-            // edges: vec![],
+            edges: vec![],
         }
     }
 
@@ -18,5 +18,13 @@ impl Object {
 
     pub fn points(&self) -> &Vec<nalgebra::geometry::Point3<f32>> {
         &self.points
+    }
+
+    pub fn add_edge(&mut self, a: usize, b: usize) {
+        self.edges.push((a, b));
+    }
+
+    pub fn edges(&self) -> &Vec<(usize, usize)> {
+        &self.edges
     }
 }

@@ -1,3 +1,4 @@
+mod line;
 use std::f32::consts::PI;
 
 use crate::object;
@@ -39,7 +40,7 @@ impl View {
             clear_pixel: ' ',
             vert_pixel: '*',
             center_pixel: None,
-            border: ['│', '─', '└', '┘', '┌', '┐'],
+            border: ['│', '─', '┌', '┐', '└', '┘'],
         }
     }
 
@@ -66,7 +67,11 @@ impl View {
                 verts.push(self.get_projection(point));
             }
         }
-        // println!("{:?}", verts);
+
+        let mut edges = vec![];
+        for edge in obj.edges() {
+            edges.append(&mut line::get_points_between(verts[edge.0], verts[edge.1]))
+        }
         for i in 0..self.resolution.1 {
             let y: i32 = self.resolution.1 as i32 / 2 - i as i32;
 
@@ -81,6 +86,10 @@ impl View {
                         print!("{}", center_pixel);
                         continue;
                     }
+                }
+                if edges.contains(&(x as f32, y as f32)) {
+                    print!("-");
+                    continue;
                 }
                 if verts.contains(&(x as f32, y as f32)) {
                     print!("{}", self.vert_pixel);
@@ -98,19 +107,19 @@ impl View {
     }
 
     fn draw_border_bottom(&self) {
-        print!("{}\n{}", self.border[0], self.border[2]);
+        print!("{}\n{}", self.border[0], self.border[4]);
         for _ in 0..self.resolution.0 {
             print!("{}", self.border[1]);
         }
-        print!("{}", self.border[3]);
+        print!("{}", self.border[5]);
     }
 
     fn draw_border_top(&self) {
-        print!("{}", self.border[4]);
+        print!("{}", self.border[2]);
         for _ in 0..self.resolution.0 {
             print!("{}", self.border[1]);
         }
-        print!("{}\n{}", self.border[5], self.border[0]);
+        print!("{}\n{}", self.border[3], self.border[0]);
     }
 
     fn get_projection(&self, point: &Point3<f32>) -> (f32, f32) {
