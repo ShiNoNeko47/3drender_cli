@@ -1,2 +1,2 @@
 pub mod object;
-pub mod view;
+pub mod render;

@@ -60,78 +60,103 @@ impl View {
         self.up = self.right.cross(&self.forward).normalize();
     }
 
-    pub fn render(&self, obj: &object::Object) {
+    pub fn render(&self, obj: &object::Object) -> String {
+        let mut render = String::new();
         let mut verts = vec![];
         for point in obj.points() {
             if point.x != self.origin.x || point.y != self.origin.y || point.z != self.origin.z {
                 verts.push(self.get_projection(point));
+                // match self.get_projection(point) {
+                //     Some(p) => {
+                //         verts.push(p);
+                //     }
+                //     None => {}
+                // }
             }
         }
 
         let mut edges = vec![];
         for edge in obj.edges() {
-            edges.append(&mut line::get_points_between(verts[edge.0], verts[edge.1]))
+            let edge = &mut line::get_points_between(verts[edge.0], verts[edge.1]);
+            if let Some(edge) = edge {
+                edges.append(edge);
+            }
         }
         for i in 0..self.resolution.1 {
             let y: i32 = self.resolution.1 as i32 / 2 - i as i32;
 
             if i == 0 {
-                self.draw_border_top();
+                self.draw_border_top(&mut render);
             }
 
             for j in 0..self.resolution.0 {
                 let x: i32 = j as i32 - self.resolution.0 as i32 / 2;
                 if y == 0 && x == 0 {
                     if let Some(center_pixel) = self.center_pixel {
-                        print!("{}", center_pixel);
+                        render.push_str(&format!("{}", center_pixel));
                         continue;
                     }
                 }
                 if edges.contains(&(x as f32, y as f32)) {
-                    print!("-");
+                    render.push_str("-");
                     continue;
                 }
-                if verts.contains(&(x as f32, y as f32)) {
-                    print!("{}", self.vert_pixel);
+                if verts.contains(&Some((x as f32, y as f32))) {
+                    render.push_str(&format!("{}", self.vert_pixel));
                     continue;
                 }
-                print!("{}", self.clear_pixel);
+                render.push_str(&format!("{}", self.clear_pixel));
             }
 
             if i == self.resolution.1 - 1 {
-                self.draw_border_bottom();
+                self.draw_border_bottom(&mut render);
                 continue;
             }
-            print!("{}\n{}", self.border[0], self.border[0]);
+            render.push_str(&format!("{}\n{}", self.border[0], self.border[0]));
         }
+
+        render
     }
 
-    fn draw_border_bottom(&self) {
-        print!("{}\n{}", self.border[0], self.border[4]);
+    fn draw_border_bottom(&self, render: &mut String) {
+        render.push_str(&format!("{}\n{}", self.border[0], self.border[4]));
         for _ in 0..self.resolution.0 {
-            print!("{}", self.border[1]);
+            render.push_str(&format!("{}", self.border[1]));
         }
-        print!("{}", self.border[5]);
+        render.push_str(&format!("{}", self.border[5]));
     }
 
-    fn draw_border_top(&self) {
-        print!("{}", self.border[2]);
+    fn draw_border_top(&self, render: &mut String) {
+        render.push_str(&format!("{}", self.border[2]));
         for _ in 0..self.resolution.0 {
-            print!("{}", self.border[1]);
+            render.push_str(&format!("{}", self.border[1]));
         }
-        print!("{}\n{}", self.border[3], self.border[0]);
+        render.push_str(&format!("{}\n{}", self.border[3], self.border[0]));
     }
 
-    fn get_projection(&self, point: &Point3<f32>) -> (f32, f32) {
+    fn get_projection(&self, point: &Point3<f32>) -> Option<(f32, f32)> {
         let view = Isometry3::look_at_rh(&self.origin, &self.look, &self.up);
 
         let projection = Perspective3::new(0.5, self.fov, self.near, self.far);
         let model_view_projection = projection.into_inner() * view.to_homogeneous();
         let point_coords = model_view_projection * Point3::to_homogeneous(point);
         let multiplier = self.resolution.0.max(self.resolution.1);
-        (
+        if point_coords.z < 0.0 {
+            return None;
+        }
+        Some((
             (Point3::from_homogeneous(point_coords).unwrap().x * multiplier as f32 / 4.0).round(),
             (Point3::from_homogeneous(point_coords).unwrap().y * multiplier as f32 / 4.0).round(),
-        )
+        ))
+    }
+
+    pub fn move_forward(
+        &mut self,
+        distance: f32,
+    ) -> (nalgebra::Point3<f32>, nalgebra::Point3<f32>) {
+        self.origin += self.forward * distance;
+        self.look += self.forward * distance;
+        self.update_vectors();
+        (self.origin, self.look)
     }
 }

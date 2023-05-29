@@ -1,13 +1,14 @@
-use cli_render::{object, view::View};
+use cli_render::{object, render::View};
 
 fn main() {
     let mut camera = View::new(
         nalgebra::Point3::new(0.0, 0.0, 0.0),
         nalgebra::Point3::new(4.0, 3.0, 6.0),
     );
-    camera.border[0] = ' ';
-    camera.border[1] = ' ';
-    // camera.resolution = (300, 75);
+    // camera.border[0] = ' ';
+    // camera.border[1] = ' ';
+    camera.border = [' ', ' ', ' ', ' ', ' ', ' '];
+    camera.resolution = (150, 45);
 
     // camera.center_pixel = Some('o');
     // camera.clear_pixel = '.';
@@ -37,5 +38,31 @@ fn main() {
 
     // object.add_point(0.0, 0.0, 0.0);
 
-    camera.render(&object);
+    ncurses::initscr();
+    ncurses::cbreak();
+    ncurses::noecho();
+    ncurses::refresh();
+    ncurses::curs_set(ncurses::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
+
+    let mut key;
+
+    loop {
+        ncurses::clear();
+        ncurses::addstr(&format!("{}", camera.render(&object)));
+        key = ncurses::getch();
+        // ncurses::addstr(&format!("{}", key));
+        match key {
+            113 => {
+                ncurses::endwin();
+                break;
+            }
+            119 => {
+                ncurses::addstr(&format!("{:?}\n", camera.move_forward(1.0)));
+            }
+            115 => {
+                ncurses::addstr(&format!("{:?}\n", camera.move_forward(-1.0)));
+            }
+            _ => {}
+        }
+    }
 }

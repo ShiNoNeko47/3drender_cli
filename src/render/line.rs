@@ -1,6 +1,13 @@
 //this code was written at 3am, if it ain't broke, don't fix it
-pub fn get_points_between(a: (f32, f32), b: (f32, f32)) -> Vec<(f32, f32)> {
+pub fn get_points_between(a: Option<(f32, f32)>, b: Option<(f32, f32)>) -> Option<Vec<(f32, f32)>> {
     let mut points = vec![];
+
+    if a.is_none() || b.is_none() {
+        return None;
+    }
+
+    let a = a.unwrap();
+    let b = b.unwrap();
 
     let x = b.0 - a.0;
     let y = b.1 - a.1;
@@ -12,7 +19,7 @@ pub fn get_points_between(a: (f32, f32), b: (f32, f32)) -> Vec<(f32, f32)> {
                 (a.1 + i as f32 * (y / x).abs() * y.signum()).round(),
             ));
         }
-        return points;
+        return Some(points);
     }
     for i in 1..y.abs() as i32 {
         points.push((
@@ -20,5 +27,5 @@ pub fn get_points_between(a: (f32, f32), b: (f32, f32)) -> Vec<(f32, f32)> {
             a.1 + i as f32 * y.signum(),
         ))
     }
-    points
+    Some(points)
 }
