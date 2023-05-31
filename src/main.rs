@@ -5,7 +5,8 @@ fn main() {
         nalgebra::Point3::new(0.0, 0.0, 0.0),
         nalgebra::Point3::new(4.0, 3.0, 6.0),
     );
-    // camera.resolution = (150, 45);
+    camera.resolution = (150, 45);
+    // camera.fov = PI;
 
     // camera.center_pixel = Some('o');
     // camera.clear_pixel = '.';
@@ -33,7 +34,7 @@ fn main() {
     object.add_edge(7, 3);
     object.add_edge(1, 3);
 
-    // object.add_point(0.0, 0.0, 0.0);
+    let icosphere = object::Object::from_obj_file("src/data/icosphere.obj");
 
     ncurses::initscr();
     ncurses::raw();
@@ -43,29 +44,57 @@ fn main() {
 
     let mut key;
 
+    let mut render = camera.render(&icosphere);
+    render.reverse();
+    for _ in 0..render.len() {
+        ncurses::addstr(&format!(
+            "{}\n",
+            String::from_utf8(render.pop().unwrap()).unwrap()
+        ));
+    }
+
     loop {
-        ncurses::clear();
-        let render = camera.render(&object);
-        for i in 0..render.len() {
-            ncurses::addstr(&format!(
-                "{}\n",
-                String::from_utf8(render[i].clone()).unwrap()
-            ));
-        }
         key = ncurses::getch();
+        ncurses::clear();
         // ncurses::addstr(&format!("{}", key));
+        let mut info = format!("Key pressed: {}", key);
         match key {
             113 => {
                 ncurses::endwin();
                 break;
             }
             119 => {
-                ncurses::addstr(&format!("{:?}\n", camera.move_forward(1.0)));
+                camera.move_forward(1.0);
             }
             115 => {
-                ncurses::addstr(&format!("{:?}\n", camera.move_forward(-1.0)));
+                camera.move_forward(-1.0);
+            }
+            100 => {
+                camera.move_right(1.0);
+            }
+            97 => {
+                camera.move_right(-1.0);
+            }
+            43 => {
+                camera.zoom += 0.1;
+                info = format!("Zoom: {}", camera.zoom);
+            }
+            45 => {
+                if camera.zoom > 0.2 {
+                    camera.zoom -= 0.1;
+                }
+                info = format!("Zoom: {}", camera.zoom);
             }
             _ => {}
         }
+        let mut render = camera.render(&icosphere);
+        render.reverse();
+        for _ in 0..render.len() {
+            ncurses::addstr(&format!(
+                "{}\n",
+                String::from_utf8(render.pop().unwrap()).unwrap()
+            ));
+        }
+        ncurses::addstr(&info);
     }
 }
