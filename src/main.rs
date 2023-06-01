@@ -1,4 +1,5 @@
 use cli_render::{object, render::View};
+use nalgebra::Point3;
 
 fn main() {
     let mut camera = View::new(
@@ -11,30 +12,8 @@ fn main() {
     // camera.center_pixel = Some('o');
     // camera.clear_pixel = '.';
 
-    let mut object = object::Object::new();
-    object.add_point(-2.0, -2.0, -2.0); //0
-    object.add_point(-2.0, -2.0, 2.0); //1
-    object.add_point(-2.0, 2.0, -2.0); //2
-    object.add_point(-2.0, 2.0, 2.0); //3
-    object.add_point(2.0, -2.0, -2.0); //4
-    object.add_point(2.0, -2.0, 2.0); //5
-    object.add_point(2.0, 2.0, -2.0); //6
-    object.add_point(2.0, 2.0, 2.0); //7
-
-    object.add_edge(0, 1);
-    object.add_edge(0, 2);
-    object.add_edge(0, 4);
-    object.add_edge(5, 4);
-    object.add_edge(5, 1);
-    object.add_edge(5, 7);
-    object.add_edge(2, 3);
-    object.add_edge(2, 6);
-    object.add_edge(4, 6);
-    object.add_edge(7, 6);
-    object.add_edge(7, 3);
-    object.add_edge(1, 3);
-
-    let icosphere = object::Object::from_obj_file("src/data/icosphere.obj");
+    // let object = object::Object::from_obj_file("src/data/icosphere.obj");
+    let object = object::presets::cube(4.0, Point3::new(0.0, 0.0, 0.0));
 
     ncurses::initscr();
     ncurses::raw();
@@ -44,7 +23,7 @@ fn main() {
 
     let mut key;
 
-    let mut render = camera.render(&icosphere);
+    let mut render = camera.render(&object);
     render.reverse();
     for _ in 0..render.len() {
         ncurses::addstr(&format!(
@@ -87,7 +66,7 @@ fn main() {
             }
             _ => {}
         }
-        let mut render = camera.render(&icosphere);
+        let mut render = camera.render(&object);
         render.reverse();
         for _ in 0..render.len() {
             ncurses::addstr(&format!(
