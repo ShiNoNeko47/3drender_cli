@@ -26,8 +26,14 @@ pub struct View {
 impl View {
     pub fn new(look: Point3<f32>, origin: Point3<f32>) -> Self {
         let forward = (look - origin).normalize();
-        let right = forward.cross(&Vector3::y()).normalize();
+        let right: Matrix3x1<f32>;
+        if look.x == origin.x && look.z == origin.z {
+            right = Vector3::x().normalize();
+        } else {
+            right = forward.cross(&Vector3::y()).normalize();
+        }
         let up = right.cross(&forward).normalize();
+
         Self {
             origin,
             look,
@@ -53,12 +59,13 @@ impl View {
 
     pub fn set_origin(&mut self, origin: Point3<f32>) {
         self.origin = origin;
-        self.update_vectors();
     }
 
     fn update_vectors(&mut self) {
         self.forward = (self.look - self.origin).normalize();
-        self.right = self.forward.cross(&Vector3::y()).normalize();
+        if self.look.x != self.origin.x || self.look.z != self.origin.z {
+            self.right = self.forward.cross(&Vector3::y()).normalize();
+        }
         self.up = self.right.cross(&self.forward).normalize();
     }
 
@@ -84,19 +91,13 @@ impl View {
             .filter(|vert| vert.is_some())
             .map(|vert| vert.unwrap())
             .collect();
-
-        // for vert in verts {
-        //     if vert.is_none() {
-        //         continue;
-        //     }
-        //     self.render_pixel(vert.unwrap(), &mut render, self.vert_pixel);
-        // }
-        //
-        // for edge in edges {
-        //     self.render_pixel(edge, &mut render);
-        // }
         verts.append(&mut edges);
-        verts.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
+        verts.sort_by(|a, b| {
+            b.2.partial_cmp(&a.2).unwrap_or_else(|| {
+                println!("a: {a:?}, b: {b:?}");
+                std::cmp::Ordering::Equal
+            })
+        });
 
         for vert in verts {
             self.render_pixel(vert, &mut render);
@@ -143,14 +144,14 @@ impl View {
     ) -> (nalgebra::Point3<f32>, nalgebra::Point3<f32>) {
         self.origin += self.forward * distance;
         self.look += self.forward * distance;
-        self.update_vectors();
+        // self.update_vectors();
         (self.origin, self.look)
     }
 
     pub fn move_right(&mut self, distance: f32) -> (nalgebra::Point3<f32>, nalgebra::Point3<f32>) {
         self.origin -= self.right * distance;
         self.look -= self.right * distance;
-        self.update_vectors();
+        // self.update_vectors();
         (self.origin, self.look)
     }
 }
