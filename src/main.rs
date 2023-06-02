@@ -1,10 +1,11 @@
+use std::f32::consts::PI;
+
 use cli_render::{object, render::View};
-use nalgebra::Point3;
 
 fn main() {
     let mut camera = View::new(
         nalgebra::Point3::new(0.0, 0.0, 0.0),
-        nalgebra::Point3::new(4.0, 3.0, 6.0),
+        nalgebra::Point3::new(0.0, 0.0, 5.0),
     );
     camera.resolution = (150, 45);
     // camera.fov = PI;
@@ -12,8 +13,8 @@ fn main() {
     // camera.center_pixel = Some('o');
     // camera.clear_pixel = '.';
 
-    // let object = object::Object::from_obj_file("src/data/icosphere.obj");
-    let object = object::presets::cube(4.0, Point3::new(0.0, 0.0, 0.0));
+    let object = object::Object::from_obj_file("src/data/monkey.obj");
+    // let object = object::presets::cube(4.0, Point3::new(0.0, 0.0, 0.0));
 
     ncurses::initscr();
     ncurses::raw();
@@ -39,20 +40,65 @@ fn main() {
         let mut info = format!("Key pressed: {}", key);
         match key {
             113 => {
+                //q
                 ncurses::endwin();
                 break;
             }
             119 => {
+                //w
                 camera.move_forward(1.0);
             }
             115 => {
+                //s
                 camera.move_forward(-1.0);
             }
             100 => {
+                //d
                 camera.move_right(1.0);
             }
             97 => {
+                //a
                 camera.move_right(-1.0);
+            }
+            32 => {
+                //<space>
+                camera.move_up(1.0);
+            }
+            0 => {
+                //<C-space>
+                camera.move_up(-1.0);
+            }
+            1 => {
+                //<C-a>
+                camera.look_right(-PI / 16.0);
+            }
+            4 => {
+                //<C-d>
+                camera.look_right(PI / 16.0);
+            }
+            23 => {
+                //<C-w>
+                camera.look_up(-PI / 16.0);
+            }
+            19 => {
+                //<C-s>
+                camera.look_up(PI / 16.0);
+            }
+            65 => {
+                //A
+                camera.look_right_around(PI / 16.0);
+            }
+            68 => {
+                //D
+                camera.look_right_around(-PI / 16.0);
+            }
+            87 => {
+                //W
+                camera.look_up_around(-PI / 16.0);
+            }
+            83 => {
+                //S
+                camera.look_up_around(PI / 16.0);
             }
             43 => {
                 camera.zoom += 0.1;

@@ -144,14 +144,64 @@ impl View {
     ) -> (nalgebra::Point3<f32>, nalgebra::Point3<f32>) {
         self.origin += self.forward * distance;
         self.look += self.forward * distance;
-        // self.update_vectors();
         (self.origin, self.look)
     }
 
     pub fn move_right(&mut self, distance: f32) -> (nalgebra::Point3<f32>, nalgebra::Point3<f32>) {
         self.origin -= self.right * distance;
         self.look -= self.right * distance;
-        // self.update_vectors();
         (self.origin, self.look)
+    }
+
+    pub fn move_up(&mut self, distance: f32) -> (nalgebra::Point3<f32>, nalgebra::Point3<f32>) {
+        self.origin += self.up * distance;
+        self.look += self.up * distance;
+
+        (self.origin, self.look)
+    }
+
+    fn rotate(&mut self, axis: Matrix3x1<f32>, angle: f32) {
+        let rotation = nalgebra::Rotation3::new(axis * angle);
+        let point = rotation * (self.look - self.origin);
+        self.look = Point3::new(
+            point.x + self.origin.x,
+            point.y + self.origin.y,
+            point.z + self.origin.z,
+        );
+        self.update_vectors();
+        // self.look
+    }
+
+    fn rotate_around(&mut self, axis: Matrix3x1<f32>, angle: f32) {
+        let rotation = nalgebra::Rotation3::new(axis * angle);
+        let point = rotation * (self.origin - self.look);
+        self.origin = Point3::new(
+            point.x + self.look.x,
+            point.y + self.look.y,
+            point.z + self.look.z,
+        );
+        self.update_vectors();
+    }
+
+    pub fn look_up_around(&mut self, angle: f32) -> nalgebra::Matrix3x1<f32> {
+        self.rotate_around(self.right, angle);
+        self.forward
+    }
+
+    pub fn look_right_around(&mut self, angle: f32) -> nalgebra::Matrix3x1<f32> {
+        self.rotate_around(nalgebra::Matrix3x1::<f32>::y(), angle);
+        self.forward
+    }
+
+    pub fn look_right(&mut self, angle: f32) -> nalgebra::Matrix3x1<f32> {
+        let up = self.up;
+        self.rotate(self.up, angle);
+        self.up = up;
+        self.forward
+    }
+
+    pub fn look_up(&mut self, angle: f32) -> nalgebra::Matrix3x1<f32> {
+        self.rotate(self.right, angle);
+        self.forward
     }
 }
