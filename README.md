@@ -1,2 +1,2 @@
-# render_obj_cli
-rendering obj (wavefront) and 3d movement with ncurses in rust
+# 3drender_cli
+rendering 3d objects or .obj (wavefront) to your terminal written in rust
