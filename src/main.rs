@@ -19,6 +19,7 @@ fn main() {
     ncurses::initscr();
     ncurses::raw();
     ncurses::noecho();
+    ncurses::nodelay(ncurses::stdscr(), true);
     ncurses::refresh();
     ncurses::curs_set(ncurses::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
 
@@ -34,7 +35,11 @@ fn main() {
     }
 
     loop {
+        ncurses::napms(16);
         key = ncurses::getch();
+        if key == -1 {
+            continue;
+        }
         ncurses::clear();
         // ncurses::addstr(&format!("{}", key));
         let mut info = format!("Key pressed: {}", key);
